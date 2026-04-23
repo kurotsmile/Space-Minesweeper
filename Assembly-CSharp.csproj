@@ -52,6 +52,7 @@
     <Compile Include="Assets/Space-Minesweeper/Scripts/ScoreManager.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_Box_Item.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_Box_Btn_Item.cs" />
+    <Compile Include="Assets/Space-Minesweeper/Scripts/SkyboxBackdrop.cs" />
     <Compile Include="Assets/Space-Minesweeper/Standard Assets/Effects/ImageEffects/Scripts/DepthOfFieldDeprecated.cs" />
     <Compile Include="Assets/Space-Minesweeper/Standard Assets/Effects/ImageEffects/Scripts/ScreenOverlay.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_Box_Btn_Panel.cs" />
@@ -106,7 +107,6 @@
     <Compile Include="Assets/Space-Minesweeper/Standard Assets/Effects/ImageEffects/Scripts/Bloom.cs" />
     <Compile Include="Assets/Space-Minesweeper/Standard Assets/Effects/ImageEffects/Scripts/ColorCorrectionCurves.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_Item_top_player.cs" />
-    <Compile Include="Assets/Space-Minesweeper/Scripts/SkyboxScript.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_Window_Camera.cs" />
     <Compile Include="Assets/Space-Minesweeper/Standard Assets/Effects/ImageEffects/Scripts/NoiseAndScratches.cs" />
     <Compile Include="Assets/Carrot-Framework-App/carrot_script/Carrot_list_app.cs" />

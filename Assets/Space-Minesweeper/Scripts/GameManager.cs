@@ -27,7 +27,6 @@ public class GameManager : MonoBehaviour
     // handles
     public GameObject GridPrefab;
     public UIManager UI;
-    public GameObject cam_skybox;
     public Camera cam_game;
     private GridScript _grid;
     public ParticleSystem[] Explosions;
@@ -39,8 +38,7 @@ public class GameManager : MonoBehaviour
     private GameSettings _settings;
     private game_mode play_mode;
     private int _currentSkyboxIndex = -1;
-    private Skybox _skyboxComponent;
-    private SkyboxScript _skyboxScript;
+    private SkyboxBackdrop _skyboxBackdrop;
 
     // score variables
     private float _startTime;
@@ -205,20 +203,16 @@ public class GameManager : MonoBehaviour
     {
         if (this.cam_game == null) return;
 
-        if (this._skyboxComponent == null)
+        if (this._skyboxBackdrop == null)
         {
-            this._skyboxComponent = this.cam_game.GetComponent<Skybox>();
-            if (this._skyboxComponent == null)
-                this._skyboxComponent = this.cam_game.gameObject.AddComponent<Skybox>();
+            this._skyboxBackdrop = this.cam_game.GetComponent<SkyboxBackdrop>();
+            if (this._skyboxBackdrop == null)
+                this._skyboxBackdrop = this.cam_game.gameObject.AddComponent<SkyboxBackdrop>();
         }
 
-        if (this._skyboxScript == null)
-            this._skyboxScript = this.cam_game.GetComponent<SkyboxScript>();
+        this.cam_game.clearFlags = CameraClearFlags.SolidColor;
+        this.cam_game.backgroundColor = Color.black;
 
-        this.cam_game.clearFlags = CameraClearFlags.Skybox;
-
-        if (this.cam_skybox != null && this.cam_skybox != this.cam_game.gameObject)
-            this.cam_skybox.SetActive(false);
     }
 
     private void RepairSkyboxMaterials()
@@ -242,7 +236,7 @@ public class GameManager : MonoBehaviour
         CacheSkyboxHandles();
         RepairSkyboxMaterials();
 
-        if (this._skyboxComponent == null || this.Skyboxes == null || this.Skyboxes.Length == 0) return;
+        if (this._skyboxBackdrop == null || this.Skyboxes == null || this.Skyboxes.Length == 0) return;
 
         int rand_skybox = Random.Range(0, this.Skyboxes.Length);
         if (avoidCurrent && this.Skyboxes.Length > 1 && rand_skybox == this._currentSkyboxIndex)
@@ -252,11 +246,9 @@ public class GameManager : MonoBehaviour
         if (selectedSkybox == null) return;
 
         this._currentSkyboxIndex = rand_skybox;
-        this._skyboxComponent.material = selectedSkybox;
+        this._skyboxBackdrop.ApplySkybox(selectedSkybox);
+        this._skyboxBackdrop.Rotation = GetRandomVector();
         RenderSettings.skybox = selectedSkybox;
-
-        if (this._skyboxScript != null)
-            this._skyboxScript.rotation = GetRandomVector();
 
         DynamicGI.UpdateEnvironment();
     }
@@ -307,7 +299,7 @@ public class GameManager : MonoBehaviour
         if (rnd == 2)
             v.z = 1;
 
-        v *= 0.025f;
+        v *= 0.2f;
 
         return v;
     }
