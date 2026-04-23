@@ -7,6 +7,7 @@ using Random = UnityEngine.Random;
 public enum game_mode {easy,dificult,super_difficult}
 public class GameManager : MonoBehaviour
 {
+    private const string SKYBOX_SHADER_NAME = "Skybox/6 Sided";
 
     [Header("Panel Game")]
     public GameObject panel_menu;
@@ -21,6 +22,8 @@ public class GameManager : MonoBehaviour
     public static bool IsGameOver;
 
     public Carrot.Carrot carrot;
+    public IronSourceAds ads;
+
     // handles
     public GameObject GridPrefab;
     public UIManager UI;
@@ -35,6 +38,9 @@ public class GameManager : MonoBehaviour
     private Transform _gridtf;
     private GameSettings _settings;
     private game_mode play_mode;
+    private int _currentSkyboxIndex = -1;
+    private Skybox _skyboxComponent;
+    private SkyboxScript _skyboxScript;
 
     // score variables
     private float _startTime;
@@ -63,6 +69,9 @@ public class GameManager : MonoBehaviour
             _settings = GameSettings.Beginner_portrait;
         else
             _settings = GameSettings.Beginner_landspace;
+
+        CacheSkyboxHandles();
+        RepairSkyboxMaterials();
         
     }
 
@@ -77,7 +86,7 @@ public class GameManager : MonoBehaviour
         this.panel_menu.SetActive(true);
         this.panel_play.SetActive(false);
         this.panel_done.SetActive(false);
-        this.load_skybox();
+        this.LoadRandomSkybox(false);
     }
 
     private void check_exit_app()
@@ -97,11 +106,11 @@ public class GameManager : MonoBehaviour
 
     private void act_play_game()
     {
-        this.carrot.ads.show_ads_Interstitial();
+        this.ads.show_ads_Interstitial();
         this.panel_menu.SetActive(false);
         this.panel_play.SetActive(true);
         this.panel_done.SetActive(false);
-        this.load_skybox();
+        this.LoadRandomSkybox();
         this.carrot.play_sound_click();
     }
 
@@ -175,7 +184,7 @@ public class GameManager : MonoBehaviour
 
     public void show_win()
     {
-        this.carrot.ads.show_ads_Interstitial();
+        this.ads.show_ads_Interstitial();
         this.act_game_done();
         this.panel_win.SetActive(true);
         this.carrot.game.update_scores_player(this.game_score_hight);
@@ -184,7 +193,7 @@ public class GameManager : MonoBehaviour
 
     public void show_gameover()
     {
-        this.carrot.ads.show_ads_Interstitial();
+        this.ads.show_ads_Interstitial();
         this.act_game_done();
         this.panel_gameover.SetActive(true);
         this.panel_play.SetActive(false);
@@ -192,21 +201,75 @@ public class GameManager : MonoBehaviour
         this.carrot.play_vibrate();
     }
 
-    private void load_skybox()
+    private void CacheSkyboxHandles()
     {
+        if (this.cam_game == null) return;
+
+        if (this._skyboxComponent == null)
+        {
+            this._skyboxComponent = this.cam_game.GetComponent<Skybox>();
+            if (this._skyboxComponent == null)
+                this._skyboxComponent = this.cam_game.gameObject.AddComponent<Skybox>();
+        }
+
+        if (this._skyboxScript == null)
+            this._skyboxScript = this.cam_game.GetComponent<SkyboxScript>();
+
+        this.cam_game.clearFlags = CameraClearFlags.Skybox;
+
+        if (this.cam_skybox != null && this.cam_skybox != this.cam_game.gameObject)
+            this.cam_skybox.SetActive(false);
+    }
+
+    private void RepairSkyboxMaterials()
+    {
+        if (this.Skyboxes == null || this.Skyboxes.Length == 0) return;
+
+        Shader skyboxShader = Shader.Find(SKYBOX_SHADER_NAME);
+        if (skyboxShader == null) return;
+
+        foreach (Material skyboxMaterial in this.Skyboxes)
+        {
+            if (skyboxMaterial == null) continue;
+            if (skyboxMaterial.shader == skyboxShader) continue;
+
+            skyboxMaterial.shader = skyboxShader;
+        }
+    }
+
+    private void LoadRandomSkybox(bool avoidCurrent = true)
+    {
+        CacheSkyboxHandles();
+        RepairSkyboxMaterials();
+
+        if (this._skyboxComponent == null || this.Skyboxes == null || this.Skyboxes.Length == 0) return;
+
         int rand_skybox = Random.Range(0, this.Skyboxes.Length);
-        this.cam_skybox.GetComponent<Skybox>().material = this.Skyboxes[rand_skybox];
-        this.cam_skybox.GetComponent<SkyboxScript>().rotation = GetRandomVector();
+        if (avoidCurrent && this.Skyboxes.Length > 1 && rand_skybox == this._currentSkyboxIndex)
+            rand_skybox = (rand_skybox + Random.Range(1, this.Skyboxes.Length)) % this.Skyboxes.Length;
+
+        Material selectedSkybox = this.Skyboxes[rand_skybox];
+        if (selectedSkybox == null) return;
+
+        this._currentSkyboxIndex = rand_skybox;
+        this._skyboxComponent.material = selectedSkybox;
+        RenderSettings.skybox = selectedSkybox;
+
+        if (this._skyboxScript != null)
+            this._skyboxScript.rotation = GetRandomVector();
+
+        DynamicGI.UpdateEnvironment();
     }
 
     public void btn_back_menu()
     {
-        this.carrot.ads.show_ads_Interstitial();
+        this.ads.show_ads_Interstitial();
         this.carrot.play_sound_click();
         this.panel_play.SetActive(false);
         this.panel_menu.SetActive(true);
         this.grid_game.SetActive(false);
         this.panel_done.SetActive(false);
+        this.LoadRandomSkybox();
     }
 
     public void StartNewGame(GameSettings settings)
@@ -224,7 +287,6 @@ public class GameManager : MonoBehaviour
         ResetGameState();
         UI.ResetHUD(_flagCount);
 
-        this.cam_skybox.GetComponent<SkyboxScript>().rotation = GetRandomVector();
     }
 
     Vector3 GetRandomVector()
@@ -306,7 +368,7 @@ public class GameManager : MonoBehaviour
 
     public void btn_game_setting()
     {
-        this.carrot.ads.show_ads_Interstitial();
+        this.ads.show_ads_Interstitial();
         Carrot.Carrot_Box box_setting=this.carrot.Create_Setting();
         box_setting.update_color_table_row();
     }
@@ -422,4 +484,3 @@ public class GameSettings
 
 
 }
-

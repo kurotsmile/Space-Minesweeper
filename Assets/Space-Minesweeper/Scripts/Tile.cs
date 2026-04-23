@@ -76,6 +76,7 @@ public class Tile : MonoBehaviour
     {
         _flagged = false;
         _revealed = false;
+        TurnOffLight();
     }
 
     void Update()
@@ -101,6 +102,7 @@ public class Tile : MonoBehaviour
     public void Reveal()
     {
         _revealed = true;
+        TurnOffLight();
 
         // if clicked on mine
         if (this.IsMine())
@@ -113,7 +115,6 @@ public class Tile : MonoBehaviour
         else
         {
             GetComponent<Renderer>().material = Materials[_tileValue];
-            StartCoroutine("LightUp");
             if (_tileValue == 0)    RevealNeighbors();
         }
 
@@ -123,7 +124,9 @@ public class Tile : MonoBehaviour
 
     IEnumerator LightUp()
     {
-        Light l = GetComponentInChildren<Light>();
+        Light l = GetTileLight();
+        if (l == null) yield break;
+
         l.intensity = 0;
         l.enabled = true;
         
@@ -137,13 +140,17 @@ public class Tile : MonoBehaviour
     IEnumerator LightDown(Tile tile)
     {
         //Debug.Log("LightDown(): " + tile.GridPosition);
-        Light l = tile.GetComponentInChildren<Light>();
+        Light l = tile.GetTileLight();
+        if (l == null) yield break;
 
         while (l.intensity > 0)
         {
             l.intensity -= Lighting.IntensityIteration;
             yield return new WaitForSeconds(0); // necessary for increased duration of lighting up
         }
+
+        l.intensity = 0;
+        l.enabled = false;
 
         //Debug.Log("LightDown(): " + tile.GridPosition + " DONE");
     }
@@ -175,6 +182,7 @@ public class Tile : MonoBehaviour
     public void Conceal()
     {
         _revealed = false;
+        TurnOffLight();
         GetComponent<Renderer>().material = Materials[TILE_UNREVEALED];
     }
 
@@ -241,10 +249,24 @@ public class Tile : MonoBehaviour
         }
         else
         {
-            GetComponentInChildren<Light>().enabled = false;
+            TurnOffLight();
         }
 
 
+    }
+
+    private Light GetTileLight()
+    {
+        return GetComponentInChildren<Light>();
+    }
+
+    private void TurnOffLight()
+    {
+        Light l = GetTileLight();
+        if (l == null) return;
+
+        l.intensity = 0;
+        l.enabled = false;
     }
 }
 
